@@ -13,7 +13,7 @@ items.push(new Item("Sulfuras, Hand of Ragnaros", 0, 80));
 items.push(new Item("Backstage passes to a TAFKAL80ETC concert", 15, 20));
 items.push(new Item("Conjured Mana Cake", 3, 6));
 
-function update_quality(isConjured) {
+function update_quality() {
   for (var i = 0; i < items.length; i++) {
     if (
       items[i].name != "Aged Brie" &&
@@ -21,7 +21,11 @@ function update_quality(isConjured) {
     ) {
       if (items[i].quality > 0) {
         if (items[i].name != "Sulfuras, Hand of Ragnaros") {
-          items[i].quality = items[i].quality - (isConjured ? 2 : 1);
+          if (items[i].name != "Conjured Mana Cake") {
+            items[i].quality = items[i].quality - 1;
+          } else {
+            items[i].quality = items[i].quality - 2; // degrade twice as fast
+          }
         }
       }
     } else {
@@ -49,7 +53,7 @@ function update_quality(isConjured) {
         if (items[i].name != "Backstage passes to a TAFKAL80ETC concert") {
           if (items[i].quality > 0) {
             if (items[i].name != "Sulfuras, Hand of Ragnaros") {
-              items[i].quality = items[i].quality - (isConjured ? 2 : 1);
+              items[i].quality = items[i].quality - 1;
             }
           }
         } else {
@@ -62,6 +66,8 @@ function update_quality(isConjured) {
       }
     }
   }
+  console.log(`resultado: ${JSON.stringify(items, null, 2)}`);
+  return items;
 }
 
-module.exports = { Item, update_quality };
+module.exports = { Item, items, update_quality };

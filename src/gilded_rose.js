@@ -13,61 +13,41 @@ items.push(new Item("Sulfuras, Hand of Ragnaros", 0, 80));
 items.push(new Item("Backstage passes to a TAFKAL80ETC concert", 15, 20));
 items.push(new Item("Conjured Mana Cake", 3, 6));
 
+let updateRateMap = new Map();
+updateRateMap.set("+5 Dexterity Vest", -1);
+updateRateMap.set("Aged Brie", 1);
+updateRateMap.set("Elixir of the Mongoose", -1);
+updateRateMap.set("Sulfuras, Hand of Ragnaros", 0);
+updateRateMap.set("Backstage passes to a TAFKAL80ETC concert", 2);
+updateRateMap.set("Conjured Mana Cake", -2);
+
 function update_quality() {
   for (var i = 0; i < items.length; i++) {
-    if (
-      items[i].name != "Aged Brie" &&
-      items[i].name != "Backstage passes to a TAFKAL80ETC concert"
-    ) {
-      if (items[i].quality > 0) {
-        if (items[i].name != "Sulfuras, Hand of Ragnaros") {
-          if (items[i].name != "Conjured Mana Cake") {
-            items[i].quality = items[i].quality - 1;
-          } else {
-            items[i].quality = items[i].quality - 2; // degrade twice as fast
-          }
-        }
-      }
-    } else {
-      if (items[i].quality < 50) {
-        items[i].quality = items[i].quality + 1;
-        if (items[i].name == "Backstage passes to a TAFKAL80ETC concert") {
-          if (items[i].sell_in < 11) {
-            if (items[i].quality < 50) {
-              items[i].quality = items[i].quality + 1;
-            }
-          }
-          if (items[i].sell_in < 6) {
-            if (items[i].quality < 50) {
-              items[i].quality = items[i].quality + 1;
-            }
-          }
-        }
-      }
+    if (items[i].name == "Sulfuras, Hand of Ragnaros") continue;
+
+    // decrease sell_in by 1 unit
+    items[i].sell_in = items[i].sell_in - 1;
+
+    const { name, sell_in, quality } = items[i];
+    let updateRate = updateRateMap.get(name);
+
+    /* sellInFactor: sets how much will degrade the quality depending
+     on sell_in being positive or updateRate being positive (the item will not degrade)*/
+    let sellInFactor = sell_in > 0 || updateRate > 0 ? 1 : 2;
+
+    if (name == "Backstage passes to a TAFKAL80ETC concert") {
+      let updateRate =
+        sell_in === 0 ? -quality : sell_in <= 5 ? 3 : sell_in <= 10 ? 2 : 1;
+      let updatedQuality = quality + updateRate;
+      items[i].quality = updatedQuality <= 50 ? updatedQuality : 50;
+      continue;
     }
-    if (items[i].name != "Sulfuras, Hand of Ragnaros") {
-      items[i].sell_in = items[i].sell_in - 1;
-    }
-    if (items[i].sell_in < 0) {
-      if (items[i].name != "Aged Brie") {
-        if (items[i].name != "Backstage passes to a TAFKAL80ETC concert") {
-          if (items[i].quality > 0) {
-            if (items[i].name != "Sulfuras, Hand of Ragnaros") {
-              items[i].quality = items[i].quality - 1;
-            }
-          }
-        } else {
-          items[i].quality = items[i].quality - items[i].quality;
-        }
-      } else {
-        if (items[i].quality < 50) {
-          items[i].quality = items[i].quality + 1;
-        }
-      }
-    }
+    let updatedQuality = items[i].quality + updateRate * sellInFactor;
+
+    items[i].quality =
+      updatedQuality >= 0 ? (updatedQuality <= 50 ? updatedQuality : 50) : 0;
   }
-  console.log(`resultado: ${JSON.stringify(items, null, 2)}`);
   return items;
 }
 
-module.exports = { Item, items, update_quality };
+module.exports = { update_quality };
